@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Image to Text OCR</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 30px;
+      background: #ecfdf5;
+      color: #064e3b;
+      transition: background 0.3s ease;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #047857;
+      animation: fadeInDown 1s;
+    }
+    section {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 128, 96, 0.1);
+      margin-bottom: 20px;
+      animation: fadeIn 1.2s;
+    }
+    input[type="file"], select, button {
+      margin-top: 10px;
+    }
+    #drop-area {
+      border: 2px dashed #10b981;
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      background: #d1fae5;
+      transition: background 0.3s ease;
+    }
+    #drop-area.dragover {
+      background: #a7f3d0;
+    }
+    #preview {
+      margin-top: 15px;
+      max-width: 100%;
+      border: 1px solid #ddd;
+      display: block;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      margin-top: 15px;
+      font-family: monospace;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    button {
+      background-color: #10b981;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    button:hover {
+      background-color: #059669;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(10px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+    @keyframes fadeInDown {
+      from {opacity: 0; transform: translateY(-20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+  </style>
+</head>
+<body>
+
+<h1>🖼️ Image to Text OCR </h1>
+
+<section id="drop-area">
+  <p>Drag & Drop Image Here or Click to Upload</p>
+  <input type="file" id="image-upload" accept="image/*" style="display: none;" />
+</section>
+<img id="preview" src="" alt="Image Preview" />
+
+<section>
+  <div class="controls">
+    <label for="language-select">Select Language:</label>
+    <select id="language-select">
+      <option value="eng">English</option>
+      <option value="fra">French</option>
+      <option value="spa">Spanish</option>
+      <option value="deu">German</option>
+      <option value="ita">Italian</option>
+    </select>
+    <button id="extract-text-btn">Extract Text</button>
+    <button id="copy-btn" disabled>Copy Text</button>
+    <button id="download-text-btn" disabled>Download Text</button>
+  </div>
+  <p id="status"></p>
+  <textarea id="extracted-text" placeholder="Extracted text will appear here..."></textarea>
+</section>
+
+<script>
+  const dropArea = document.getElementById('drop-area');
+  const imageUpload = document.getElementById('image-upload');
+  const preview = document.getElementById('preview');
+  const extractBtn = document.getElementById('extract-text-btn');
+  const copyBtn = document.getElementById('copy-btn');
+  const downloadBtn = document.getElementById('download-text-btn');
+  const extractedText = document.getElementById('extracted-text');
+  const statusText = document.getElementById('status');
+  const languageSelect = document.getElementById('language-select');
+
+  let imageFile = null;
+
+  dropArea.addEventListener('click', () => imageUpload.click());
+  dropArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropArea.classList.add('dragover');
+  });
+  dropArea.addEventListener('dragleave', () => dropArea.classList.remove('dragover'));
+  dropArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropArea.classList.remove('dragover');
+    handleFile(e.dataTransfer.files[0]);
+  });
+
+  imageUpload.addEventListener('change', (e) => {
+    handleFile(e.target.files[0]);
+  });
+
+  function handleFile(file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  imageFile = file;
+  compressImage(file, (base64) => {
+    preview.src = base64;
+    preview.setAttribute('data-base64', base64); // Store for Tesseract
+  });
+  extractedText.value = '';
+  copyBtn.disabled = true;
+  downloadBtn.disabled = true;
+}
+
+  function compressImage(file, callback) {
+  const img = new Image();
+  const reader = new FileReader();
+
+  reader.onload = e => {
+    img.src = e.target.result;
+  };
+
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    const scale = 800 / img.width;
+    canvas.width = 800;
+    canvas.height = img.height * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    
+    const base64 = canvas.toDataURL('image/jpeg', 0.7);
+    preview.src = base64;
+    callback(base64);  // Pass base64 string instead of blob
+  };
+
+  reader.readAsDataURL(file);
+}
+
+extractBtn.addEventListener('click', () => {
+  const base64 = preview.getAttribute('data-base64');
+  if (!base64) {
+    alert("Please upload or drag an image first.");
+    return;
+  }
+
+  statusText.textContent = "Extracting text... please wait ⏳";
+
+  Tesseract.recognize(
+    base64,
+    languageSelect.value,
+    { logger: m => console.log(m) }
+  ).then(({ data: { text } }) => {
+    extractedText.value = text;
+    statusText.textContent = "✅ Text extracted successfully!";
+    downloadBtn.disabled = false;
+    copyBtn.disabled = false;
+  }).catch(err => {
+    statusText.textContent = "❌ Failed to extract text.";
+    console.error(err);
+  });
+});
+
+
+  downloadBtn.addEventListener('click', () => {
+    const text = extractedText.value;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'extracted-text.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(extractedText.value)
+      .then(() => alert("Copied to clipboard!"))
+      .catch(err => alert("Copy failed: " + err));
+  });
+</script>
+
+</body>
+</html>

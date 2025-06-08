@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Social Video Downloader</title>
+  <style>
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: #0f172a;
+      color: #d1fae5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background: #1e293b;
+      border-radius: 16px;
+      padding: 30px 40px;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h1 {
+      color: #10b981;
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #94a3b8;
+    }
+
+    input[type="url"] {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #d1fae5;
+    }
+
+    button {
+      width: 100%;
+      background: #10b981;
+      color: #0f172a;
+      border: none;
+      padding: 12px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-bottom: 10px;
+    }
+
+    button:hover {
+      background: #059669;
+    }
+
+    .note {
+      margin-top: 15px;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 25px;
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .footer a {
+      color: #10b981;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Social Video Downloader</h1>
+
+    <div class="input-group">
+      <label for="twitterLink">Twitter Video URL</label>
+      <input type="url" id="twitterLink" placeholder="https://twitter.com/..." />
+    </div>
+    <button onclick="downloadTwitter()">Download from Twitter</button>
+
+    <div class="input-group" style="margin-top: 30px;">
+      <label for="instaLink">Instagram Video URL</label>
+      <input type="url" id="instaLink" placeholder="https://www.instagram.com/..." />
+    </div>
+    <button onclick="downloadInstagram()">Download from Instagram</button>
+
+    <p class="note">Powered by third-party services — no data is stored.</p>
+
+    <div class="footer">
+      made with ❤️ by <a href="https://github.com/macobia" target="_blank">macben</a>
+    </div>
+  </div>
+
+  <script>
+    function downloadTwitter() {
+      const url = document.getElementById('twitterLink').value.trim();
+      if (url === '') {
+        alert("Please enter a Twitter URL.");
+        return;
+      }
+      // Redirect to third-party Twitter downloader
+      window.open(`https://ssstwitter.com/en?url=${encodeURIComponent(url)}`, '_blank');
+    }
+
+    function downloadInstagram() {
+      const url = document.getElementById('instaLink').value.trim();
+      if (url === '') {
+        alert("Please enter an Instagram URL.");
+        return;
+      }
+      // Redirect to third-party Instagram downloader
+      window.open(`https://igram.world/${encodeURIComponent(url)}`, '_blank');
+    }
+  </script>
+</body>
+</html>
+
